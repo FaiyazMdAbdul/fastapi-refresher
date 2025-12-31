@@ -1,0 +1,55 @@
+from fastapi import FastAPI
+from models import Product
+
+app = FastAPI()
+
+@app.get("/")
+def HelloWorld():
+    return {"message": "Hello, World!!"}
+
+
+products = [
+    Product(id=1, name="Product 1", price=100, description="Product 1 description", quantity=100, image="https://dummyimage.com/150x150/000/fff"),
+    Product(id=2, name="Product 2", price=200, description="Product 2 description", quantity=200, image="https://dummyimage.com/150x150/000/fff"),  
+    Product(id=3, name="Product 3", price=300, description="Product 3 description", quantity=300, image="https://dummyimage.com/150x150/000/fff"),
+    Product(id=4, name="Product 4", price=400, description="Product 4 description", quantity=400, image="https://dummyimage.com/150x150/000/fff"),
+    Product(id=5, name="Product 5", price=500, description="Product 5 description", quantity=500, image="https://dummyimage.com/150x150/000/fff"),
+    Product(id=6, name="Product 6", price=600, description="Product 6 description", quantity=600, image="https://dummyimage.com/150x150/000/fff"),
+    Product(id=7, name="Product 7", price=700, description="Product 7 description", quantity=700, image="https://dummyimage.com/150x150/000/fff"),
+    Product(id=8, name="Product 8", price=800, description="Product 8 description", quantity=800, image="https://dummyimage.com/150x150/000/fff"),
+    Product(id=9, name="Product 9", price=900, description="Product 9 description", quantity=900, image="https://dummyimage.com/150x150/000/fff"),
+    Product(id=10, name="Product 10", price=1000, description="Product 10 description", quantity=1000, image="https://dummyimage.com/150x150/000/fff"),
+]
+
+@app.get("/products")
+def getProducts():
+    return products
+
+@app.get("/product/{id}")
+def getProductById(id : int):
+    product = next((p for p in products if p.id == id), "not found")
+    return product
+
+
+@app.post("/product")
+def addProduct(product:Product):
+    products.append(product)
+
+@app.put("/product")
+def updateProduct(updatedProduct:Product):
+    for i, product in enumerate(products):
+        if(product.id == updatedProduct.id):
+            products[i] = updatedProduct
+            return "Updated"
+            break
+
+
+    return "not found"
+
+
+@app.delete("/product/{id}")
+def deleteProduct(id : int):
+    product = next((p for p in products if p.id == id), "not found")
+    products.remove(product)
+
+
