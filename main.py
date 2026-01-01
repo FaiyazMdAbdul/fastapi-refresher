@@ -1,7 +1,10 @@
 from fastapi import FastAPI
+from database import engine, session
+import databasemodels
 from models import Product
 
 app = FastAPI()
+databasemodels.base.metadata.create_all(bind = engine)
 
 @app.get("/")
 def HelloWorld():
@@ -21,8 +24,20 @@ products = [
     Product(id=10, name="Product 10", price=1000, description="Product 10 description", quantity=1000, image="https://dummyimage.com/150x150/000/fff"),
 ]
 
+def seed_data():
+    db = session()
+    for product in products:
+        db.add(databasemodels.Product(**product.model_dump()))
+        
+    db.commit()
+    
+
+seed_data()
+
 @app.get("/products")
 def getProducts():
+    db = session()
+    #db.query()
     return products
 
 @app.get("/product/{id}")
