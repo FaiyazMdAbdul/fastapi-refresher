@@ -1,8 +1,8 @@
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, HTTPException, status
 from sqlalchemy.orm import Session
 from database import engine, session
 import databasemodels
-from models import Product
+from models import Product, ProductCreate, ProductUpdate
 
 app = FastAPI()
 databasemodels.base.metadata.create_all(bind = engine)
@@ -43,45 +43,50 @@ def seed_data():
 
 seed_data()
 
-@app.get("/products")
+@app.get("/products", response_model=list[Product])
 def getProducts(db: Session = Depends(get_db)):
     return db.query(databasemodels.Product).all()
 
-@app.get("/product/{id}")
+@app.get("/product/{id}", response_model=Product)
 def getProductById(id : int,db:Session = Depends(get_db)):
    product = db.query(databasemodels.Product).filter(databasemodels.Product.id == id).first()
+   if not product:
+       raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Product with id {id} not found")
    return product
 
 
-@app.post("/product")
-def addProduct(product:Product,db:Session = Depends(get_db)):
-  db.add(databasemodels.Product(**product.model_dump()))
+@app.post("/product", response_model=Product, status_code=status.HTTP_201_CREATED)
+def addProduct(product:ProductCreate,db:Session = Depends(get_db)):
+  db_product = databasemodels.Product(**product.model_dump())
+  db.add(db_product)
   db.commit()
-  return "Product added"
+  db.refresh(db_product)
+  return db_product
 
-@app.put("/product")
-def updateProduct(updatedProduct:Product,db:Session =  Depends(get_db)):
+@app.put("/product", response_model=Product)
+def updateProduct(updatedProduct:ProductUpdate,db:Session =  Depends(get_db)):
   db_product = db.query(databasemodels.Product).filter(databasemodels.Product.id == updatedProduct.id).first()
-  if db_product:
-    db_product.name = updatedProduct.name
-    db_product.price = updatedProduct.price
-    db_product.description = updatedProduct.description
-    db_product.quantity = updatedProduct.quantity
-    db_product.image = updatedProduct.image
-    db.commit()
-    return "updated"
-  else:
-    return "not found"
+  if not db_product:
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Product with id {updatedProduct.id} not found")
+
+  db_product.name = updatedProduct.name
+  db_product.price = updatedProduct.price
+  db_product.description = updatedProduct.description
+  db_product.quantity = updatedProduct.quantity
+  db_product.image = updatedProduct.image
+  db.commit()
+  db.refresh(db_product)
+  return db_product
 
 
-@app.delete("/product/{id}")
+@app.delete("/product/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def deleteProduct(id : int, db:Session = Depends(get_db)):
     db_product = db.query(databasemodels.Product).filter(databasemodels.Product.id == id).first()
-    if db_product:
-        db.delete(db_product)
-        db.commit()
-        return "Deleted"
-    else:
-        return "Not found"
+    if not db_product:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Product with id {id} not found")
+
+    db.delete(db_product)
+    db.commit()
+    return None
 
 
