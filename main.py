@@ -1,5 +1,4 @@
 from fastapi import Depends, FastAPI
-from sqlalchemy import delete
 from sqlalchemy.orm import Session
 from database import engine, session
 import databasemodels
@@ -40,7 +39,7 @@ def seed_data():
     if not exists:
         for product in products:
             db.add(databasemodels.Product(**product.model_dump()))
-            db.commit()
+        db.commit()
 
 seed_data()
 
@@ -65,6 +64,7 @@ def updateProduct(updatedProduct:Product,db:Session =  Depends(get_db)):
   db_product = db.query(databasemodels.Product).filter(databasemodels.Product.id == updatedProduct.id).first()
   if db_product:
     db_product.name = updatedProduct.name
+    db_product.price = updatedProduct.price
     db_product.description = updatedProduct.description
     db_product.quantity = updatedProduct.quantity
     db_product.image = updatedProduct.image
