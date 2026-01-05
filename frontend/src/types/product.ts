@@ -1,0 +1,20 @@
+export interface Product {
+  id: number;
+  name: string;
+  price: number;
+  description: string;
+  quantity: number;
+  image: string;
+}
+
+export interface ProductCreate {
+  name: string;
+  price: number;
+  description: string;
+  quantity: number;
+  image: string;
+}
+
+export interface ProductUpdate extends ProductCreate {
+  id: number;
+}

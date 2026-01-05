@@ -1,10 +1,21 @@
 from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from database import engine, session
 import databasemodels
 from models import Product, ProductCreate, ProductUpdate
 
 app = FastAPI()
+
+# Configure CORS to allow frontend requests
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],  # Vite dev server
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 databasemodels.base.metadata.create_all(bind = engine)
 
 @app.get("/")
